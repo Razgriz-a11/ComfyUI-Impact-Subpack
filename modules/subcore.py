@@ -12,6 +12,9 @@ import os
 import pickle
 import folder_paths
 
+current_safe_globals = torch.serialization.get_safe_globals()
+if set not in current_safe_globals:
+     torch.serialization.add_safe_globals([set])
 
 orig_torch_load = torch.load
 
