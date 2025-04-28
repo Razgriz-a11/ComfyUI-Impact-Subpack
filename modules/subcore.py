@@ -12,12 +12,9 @@ import os
 import pickle
 import folder_paths
 
-current_safe_globals = torch.serialization.get_safe_globals()
-if set not in current_safe_globals:
-     torch.serialization.add_safe_globals([set])
-
 orig_torch_load = torch.load
 
+torch.load("Eyeful_v2-Paired.pt", weights_only=False)
 
 SEG = namedtuple("SEG",
                  ['cropped_image', 'cropped_mask', 'confidence', 'crop_region', 'bbox', 'label', 'control_net_wrapper'],
