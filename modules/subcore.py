@@ -8,13 +8,14 @@ from . import utils
 import inspect
 import logging
 import os
-
+if hasattr(torch.serialization, "add_safe_globals"):
+    torch.serialization.add_safe_globals([getattr])
 import pickle
 import folder_paths
 
+
 orig_torch_load = torch.load
 
-torch.load("Eyeful_v2-Paired.pt", weights_only=False)
 
 SEG = namedtuple("SEG",
                  ['cropped_image', 'cropped_mask', 'confidence', 'crop_region', 'bbox', 'label', 'control_net_wrapper'],
@@ -22,8 +23,8 @@ SEG = namedtuple("SEG",
 
 
 # --- Whitelist Configuration ---
-WHITELIST_DIR = None
-WHITELIST_FILE_PATH = None
+WHITELIST_DIR = /root/ComfyUI/custom_nodes/ComfyUI-Impact-Subpack
+WHITELIST_FILE_PATH = /root/ComfyUI/custom_nodes/ComfyUI-Impact-Subpack/model-whitelist.txt
 
 try:
     # --- Attempting: Use ComfyUI's folder_paths (Preferred Method) ---
@@ -147,6 +148,7 @@ restricted_getattr.__name__ = 'getattr'
 
 
 try:
+    torch.serialization.add_safe_globals([getattr])
     from ultralytics import YOLO
     from ultralytics.nn.tasks import DetectionModel
     from ultralytics.nn.tasks import SegmentationModel
@@ -238,7 +240,7 @@ except Exception as e:
 
 def torch_wrapper(*args, **kwargs):
     """
-    Wrapper for torch.load that attempts safe loading (weights_only=False) first.
+    Wrapper for torch.load that attempts safe loading (weights_only=True) first.
     If a specific UnpicklingError related to disallowed globals (like 'getattr')
     occurs, it checks a user-defined whitelist (_MODEL_WHITELIST). If the file
     is whitelisted, it retries with weights_only=False. Otherwise, it blocks
@@ -271,13 +273,13 @@ def torch_wrapper(*args, **kwargs):
         try:
             # --- Attempt 1: Safe Load ---
             # Try loading with the determined weights_only setting (usually True)
-            logging.debug(f"[Impact Pack/Subpack] Attempting safe load (weights_only=False) for: {filename_arg_source}")
+            logging.debug(f"[Impact Pack/Subpack] Attempting safe load (weights_only=True) for: {filename_arg_source}")
             return orig_torch_load(*args, **load_kwargs)
 
         except pickle.UnpicklingError as e:
             # --- Handle Specific Load Failure ---
             # Check if the error is the specific one caused by disallowed globals
-            # like 'getattr' AND we were attempting a safe load (weights_only=False)
+            # like 'getattr' AND we were attempting a safe load (weights_only=True)
             # Using 'getattr' because it was the specific error reported.
             is_disallowed_global_error = 'getattr' in str(e)
 
@@ -362,7 +364,7 @@ def torch_wrapper(*args, **kwargs):
         if not effective_weights_only:
             logging.warning(f"[Impact Pack/Subpack] Older PyTorch version detected. Proceeding with potentially unsafe load (weights_only=False) for: {filename_arg_source}")
         else:
-             logging.debug(f"[Impact Pack/Subpack] Older PyTorch version detected. Proceeding with explicit weights_only=False for: {filename_arg_source}")
+             logging.debug(f"[Impact Pack/Subpack] Older PyTorch version detected. Proceeding with explicit weights_only=True for: {filename_arg_source}")
 
         # Call the original torch.load directly with the determined settings for older PyTorch
         return orig_torch_load(*args, **load_kwargs)
