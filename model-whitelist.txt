@@ -1,1 +1,1 @@
-Eyeful_v2-Paired.pt
+/root/ComfyUI/models/ultralytics/bbox/Eyeful_v2-Paired.pt
