@@ -8,7 +8,8 @@ from . import utils
 import inspect
 import logging
 import os
-
+if hasattr(torch.serialization, "add_safe_globals"):
+    torch.serialization.add_safe_globals([getattr])
 import pickle
 import folder_paths
 
