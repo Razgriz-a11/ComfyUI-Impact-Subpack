@@ -8,8 +8,7 @@ from . import utils
 import inspect
 import logging
 import os
-if hasattr(torch.serialization, "add_safe_globals"):
-    torch.serialization.add_safe_globals([getattr])
+
 import pickle
 import folder_paths
 
@@ -23,8 +22,8 @@ SEG = namedtuple("SEG",
 
 
 # --- Whitelist Configuration ---
-WHITELIST_DIR = /root/ComfyUI/custom_nodes/ComfyUI-Impact-Subpack
-WHITELIST_FILE_PATH = /root/ComfyUI/custom_nodes/ComfyUI-Impact-Subpack/model-whitelist.txt
+WHITELIST_DIR = None
+WHITELIST_FILE_PATH = None
 
 try:
     # --- Attempting: Use ComfyUI's folder_paths (Preferred Method) ---
@@ -148,7 +147,6 @@ restricted_getattr.__name__ = 'getattr'
 
 
 try:
-    torch.serialization.add_safe_globals([getattr])
     from ultralytics import YOLO
     from ultralytics.nn.tasks import DetectionModel
     from ultralytics.nn.tasks import SegmentationModel
@@ -281,7 +279,7 @@ def torch_wrapper(*args, **kwargs):
             # Check if the error is the specific one caused by disallowed globals
             # like 'getattr' AND we were attempting a safe load (weights_only=True)
             # Using 'getattr' because it was the specific error reported.
-            is_disallowed_global_error = 'getattr' in str(e)
+            is_disallowed_global_error = 'getattr' in str(e) or 'Unsupported global' in str(e) or 'builtins.set' in str(e)
 
             if is_disallowed_global_error:
                 # Check the whitelist
